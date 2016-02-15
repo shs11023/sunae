@@ -1,1 +1,1 @@
-# sunae
+# This is Sunae Study Group
