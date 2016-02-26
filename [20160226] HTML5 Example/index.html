@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+	<meta charset="utf-8">
+	<title>Video/Canvas Demo 1</title>
+	<style>
+	body {
+		background: black;
+	}
+	
+	#c {
+		position: absolute;
+		top: 0;
+		bottom: 0;
+		left: 0;
+		right: 0;
+		width: 100%;
+		height: 100%;
+	}
+	
+	#v {
+		position: absolute;
+		top: 50%;
+		left: 50%;
+		width: 50%;
+		height: 50%;
+		margin: -180px 0 0 -240px;
+	}
+	
+	p {
+		position: relative;
+		z-index: 1;
+	}
+	</style>
+	<script>
+	document.addEventListener('DOMContentLoaded', function() {
+		// video 와 canvas 객체 가져옴
+		var v = document.getElementById('v');
+		var canvas = document.getElementById('c');
+		var context = canvas.getContext('2d');
+
+		var cw = Math.floor(canvas.clientWidth / 100);
+		var ch = Math.floor(canvas.clientHeight / 100);
+		canvas.width = cw;
+		canvas.height = ch;
+
+		// video 플래이 이벤트 등록
+		v.addEventListener('play', function() {
+			draw(this, context, cw, ch);
+		}, false);
+	}, false);
+
+	// 20밀리세컨드 뒤에 canvas 에 그리는 함수
+	function draw(v, c, w, h) {
+		if (v.paused || v.ended) return false;
+		c.drawImage(v, 0, 0, w, h);
+		setTimeout(draw, 20, v, c, w, h);
+	}
+	</script>
+</head>
+
+<body>
+	<!-- 배경으로 사용할 canvas -->
+	<canvas id="c" width="12" height="12"></canvas>
+
+	<!-- 배경에 활용할 비디오 -->
+	<video id="v" controls="" loop="">
+		<source src="./littlehusband.mp4" type="video/mp4">
+	</video>
+
+</html>
