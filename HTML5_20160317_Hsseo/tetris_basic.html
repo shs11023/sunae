@@ -1,0 +1,53 @@
+<html>
+	<head>
+		<title>HSSEO Tetris</title>
+		<style type="text/css">
+		#board{
+		border:1px solid black;
+		}
+		#empty{
+		background-color:#000000;
+		}
+		</style>
+		<script type="text/javascript">
+		this.blocks = new Array();
+		for(var i=0; i<10; i++){
+			this.blocks[i] = new Array();
+			for(var j=0; j<10 ;j++){
+				if(j<9)
+					this.blocks[i][j] = 0;
+				else
+					this.blocks[i][j] = 1;
+			}
+		}
+
+			function create(){
+
+			//draw blocks
+			var str="<table width=\"400\" height=\"400\" id=\"board\">";
+			for(var i=0 ;i<10; i++){
+				str += "<tr>"
+				for(var j=0 ; j<10 ; j++){
+					str += "<td id=\"empty\"></td>"
+				}
+				str += "</tr>";
+			}
+			
+			str += "</table>";
+			document.getElementById("board").innerHTML = str;
+			}
+		</script>
+	</head>
+	<body onload="create()">
+		<table width="800">
+			<tr>
+				<td colspan="2">TETRIS GAME</td>
+			</tr>
+			<tr>
+				<td><div id="board"></div></td>					
+				<td><div id="score"></div></td>
+			</tr>
+		</table>
+
+	</body>
+</html>
