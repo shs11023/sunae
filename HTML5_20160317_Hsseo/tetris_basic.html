@@ -6,35 +6,66 @@
 		border:1px solid black;
 		}
 		#empty{
+		background-color:#ffffff;
+		}
+		#block{
 		background-color:#000000;
 		}
 		</style>
 		<script type="text/javascript">
-		this.blocks = new Array();
-		for(var i=0; i<10; i++){
-			this.blocks[i] = new Array();
-			for(var j=0; j<10 ;j++){
-				if(j<9)
-					this.blocks[i][j] = 0;
-				else
-					this.blocks[i][j] = 1;
+			this.timer = null;
+			this.count = 0;			
+
+			this.blocks = new Array();
+			for(var i=0; i<10; i++){
+				this.blocks[i] = new Array();
+				for(var j=0; j<10 ;j++){
+						this.blocks[i][j] = 0;
+				}
 			}
-		}
+
+			function logicBlocks(){
+				this.count++;
+				for(var i=0 ;i<(count%10); i++){
+					this.blocks[9-i][0] = 1;
+					this.blocks[9-i][1] = 1;
+					this.blocks[9-i][2] = 1;
+					this.blocks[9-i][3] = 1;
+					this.blocks[9-i][4] = 1;
+					this.blocks[9-i][5] = 1;
+					this.blocks[9-i][6] = 1;
+					this.blocks[9-i][7] = 1;
+					this.blocks[9-i][8] = 1;
+					this.blocks[9-i][9] = 1;
+				}
+			}
+
+			function printBlocks(){
+				var str="<table width=\"400\" height=\"400\" id=\"board\">";
+				for(var i=0 ;i<10; i++){
+					str += "<tr>"
+					for(var j=0 ; j<10 ; j++){
+						if(this.blocks[i][j] == 0){
+							str += "<td id=\"empty\"></td>"
+						}else {
+							str += "<td id=\"block\"></td>"
+						}
+					}
+					str += "</tr>";
+				}
+			
+				str += "</table>";
+				document.getElementById("board").innerHTML = str;
+			}
+
+			function tick(){
+				logicBlocks();
+				printBlocks();
+				create();
+			}
 
 			function create(){
-
-			//draw blocks
-			var str="<table width=\"400\" height=\"400\" id=\"board\">";
-			for(var i=0 ;i<10; i++){
-				str += "<tr>"
-				for(var j=0 ; j<10 ; j++){
-					str += "<td id=\"empty\"></td>"
-				}
-				str += "</tr>";
-			}
-			
-			str += "</table>";
-			document.getElementById("board").innerHTML = str;
+				this.timer = setTimeout(tick(), 500, this);
 			}
 		</script>
 	</head>
