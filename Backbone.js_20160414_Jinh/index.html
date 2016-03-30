@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8"/>
+    <title>Backbone.js Cycle Riding for Dowon</title>
+    <link rel="stylesheet" href="css/screen.css">
+</head>
+<body>
+
+<div id="rides">
+    <!--div class="rideContainer">
+        <img src="img/my_cycle.png"/>
+        <ul>
+            <li>Title</li>
+            <li>Rider</li>
+            <li>Riding date</li>
+            <li>Keywords</li>
+        </ul>
+    </div-->
+    <div id="addRide">
+        <label for="coverImage">CoverImage: </label><input id="coverImage" type="file" />
+        <label for="title">Title: </label><input id="title" type="text" />
+        <label for="rider">Rider: </label><input id="rider" type="text" />
+        <label for="ridingDate">Riding date: </label><input id="ridingDate" type="text" />
+        <label for="keywords">Keywords: </label><input id="keywords" type="text" />
+        <button id="add">Add</button>
+    </div>
+    <script id="rideTemplate" type="text/template">
+        <img src="<%= coverImage %>"/>
+        <ul>
+            <li><%= title %></li>
+            <li><%= rider %></li>
+            <li><%= ridingDate %></li>
+            <li><%= keywords %></li>
+        </ul>
+        <button class="delete">Delete</button>
+    </script>
+</div>
+<script src="js/jquery.js"></script>
+<script src="js/underscore.js"></script>
+<script src="js/backbone.js"></script>
+<script src="js/ride.js"></script>
+</body>
+</html>
