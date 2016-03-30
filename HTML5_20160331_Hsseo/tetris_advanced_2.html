@@ -1,0 +1,787 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html>
+<head>
+
+    <style type="text/css">
+        #gameArea table
+        {
+            border-collapse:separate;
+            border:2px solid black;
+            border-spacing:0px;
+            empty-cells:show;
+        }
+        #panel
+        {
+            text-align:center;
+        }
+        #tetris_area td, #next_block_area td
+        {
+            border:1px solid gray;
+            padding:0px;
+            margin:0px;
+            width:20px;
+            height:20px;
+        }
+        #caption
+        {
+            font-size:20px;
+            font-style:bold;
+        }
+        .i_block
+        {
+            background-color:#6495ed;
+        }
+        .s_block
+        {
+            background-color:#FF9824;
+        }
+        .z_block
+        {
+            background-color:#FF2498;
+        }
+        .o_block
+        {
+            background-color:#552498;
+        }
+        .l_block
+        {
+            background-color:#892466;
+        }
+        .j_block
+        {
+            background-color:#248966;
+        }
+        .t_block
+        {
+            background-color:#992499;
+        }
+        .empty
+        {
+            background-color:#FFFFFF;
+        }
+    </style>
+
+    <script type="text/javascript">
+        //<![CDATA[
+        var MAX_ROW = 20;
+        var MAX_COL = 12;
+        var INIT_INTERVAL = 500;
+        var e_TetrisBlockType = {"I_BLOCK" : 0, "S_BLOCK" : 1, "Z_BLOCK" : 2, "O_BLOCK" : 3, "L_BLOCK" : 4, "J_BLOCK" : 5, "T_BLOCK" : 6};
+        var e_BlockMovement = {"RIGHT" : 0, "LEFT" : 1, "DOWN" : 2};
+        var e_BlockRotate = {"CLOCKWISE" : 0, "COUNTERCLOCKWISE" : 1};
+        var e_KeyType = {"LEFT" : 188, "RIGHT" : 191, "DOWN" : 190, "ROTATE_CLOCKWISE" : 88, "ROTATE_COUNTERCLOCKWISE" : 90};
+        function SingleBlock() {
+            this.m_blockFragmentType = null;
+            this.m_permanent = false;
+            this.init = function() {
+                this.m_blockFragmentType = null;
+                this.m_permanent = false;
+
+            }
+        }
+
+        function Console() {
+            this.m_initialized = true;
+            this.m_pause = true;
+            this.m_completedLines = 0;
+            this.m_timer = null;
+            this.m_currentBlock = null;
+            this.m_nextBlock = null;
+            this.m_score = 0;
+            this.m_field = new Array();
+            for (var i=0; i<MAX_COL; i++) {
+                this.m_field[i] = new Array();
+                for (var j=0; j<MAX_ROW; j++) {
+                    this.m_field[i][j] = new SingleBlock();
+                }
+            }
+            drawTetrisField();
+
+            this.paintCurrentBlock = function(flag) {
+                if (this.m_currentBlock != null) {
+                    var origin_x = this.m_currentBlock.m_position.m_x;
+                    var origin_y = this.m_currentBlock.m_position.m_y;
+                    for (var i=0; i<4; i++) {
+                        x = origin_x + this.m_currentBlock.m_relativeBlockPositions[i].m_x;
+                        y = origin_y + this.m_currentBlock.m_relativeBlockPositions[i].m_y;
+                        var id = "c" + x + "r" + y;
+                        if (document.getElementById(id)) {
+                            if (flag) {
+                                var className = this.m_currentBlock.getBlockClassName();
+                                document.getElementById(id).className = className;
+
+                            }
+                            else {
+                                document.getElementById(id).className = "empty";
+                            }
+                        }
+                    }
+                }
+            }
+
+            this.paintNextBlock = function(flag) {
+                if (this.m_nextBlock != null) {
+                    for (var i=0; i<4; i++) {
+                        var x = this.m_nextBlock.m_relativeBlockPositions[i].m_x+1;
+                        var y = this.m_nextBlock.m_relativeBlockPositions[i].m_y;
+                        var id = "nbc" + x + "r" + y;
+                        if (document.getElementById(id)) {
+                            if (flag) {
+                                var className = this.m_nextBlock.getBlockClassName();
+                                document.getElementById(id).className = className;
+
+                            }
+                            else {
+                                document.getElementById(id).className = "empty";
+                            }
+                        }
+                    }
+                }
+            }
+
+            function drawTetrisField() {
+                var str = "<table id =\"tetris_area\">";
+                for (var i=0; i<MAX_ROW; i++) {
+                    str += "<tr id=\"r" + i + "\">"
+                    for (var j=0; j<MAX_COL; j++) {
+                        str += "<td id=\"c" + j + "r" + i + "\"></td>";
+                    }
+                    str += "</tr>";
+                }
+                str += "</table>";
+                document.getElementById('tile').innerHTML = str;
+
+                str = "<table id =\"next_block_area\">";
+                for (var i=0; i<2; i++) {
+                    str += "<tr id=\"r" + i + "\">"
+                    for (var j=0; j<4; j++) {
+                        str += "<td id=\"nbc" + j + "r" + i + "\"></td>";
+                    }
+                    str += "</tr>";
+                }
+                str += "</table>";
+                document.getElementById('nextBlock').innerHTML = str;
+            }
+            this.getLevel = function() {
+                return Math.floor(this.m_completedLines/10)+1;
+            }
+
+            this.init = function() {
+                this.m_currentBlock = null;
+                this.m_nextBlock = new TetrisBlock(Math.floor(Math.random()*100)%7);
+                for (var i=0; i<MAX_COL; i++) {
+                    for (var j=0; j<MAX_ROW; j++) {
+                        this.m_field[i][j].init();
+                        var id = "c" + i + "r" + j;
+                        document.getElementById(id).className = "empty";
+                        if (i<4 && j<2) {
+                            var id = "nbc" + i + "r" + j;
+                            document.getElementById(id).className = "empty";
+                        }
+                    }
+                }
+                this.m_initialized = true;
+                this.m_score = 0;
+            }
+
+
+            this.begin = function() {
+                this.stop();
+                this.init();
+                this.tick(this);
+            }
+
+            this.stop = function() {
+                this.m_pause = true;
+                clearTimeout(this.m_timer);
+            }
+
+            this.pauseNstart = function() {
+                if (this.m_pause) {
+                    this.tick(this);
+                }
+                else {
+                    this.stop();
+                }
+            }
+
+            this.tick = function() {
+                this.m_pause = false;
+                if (this.m_currentBlock == null) {
+                    this.m_currentBlock = this.m_nextBlock;
+                    this.paintNextBlock(false);
+                    this.m_nextBlock = new TetrisBlock(Math.floor(Math.random()*100)%7);
+                    this.paintNextBlock(true);
+                    this.paintCurrentBlock(true);
+
+                }
+                else {
+                    if (this.isPossibleMove(e_BlockMovement.DOWN)) {
+                        this.paintCurrentBlock(false);
+                        this.m_currentBlock.moveDown();
+                        this.paintCurrentBlock(true);
+                        this.m_score += 1;
+                        document.getElementById("score").innerHTML = this.m_score;
+                    }
+                    else {
+                        this.aggregateCurrentBlock();
+                    }
+                }
+
+                var self = this;
+                if (!this.isOver()) {
+                    this.m_timer = setTimeout(function() { self.tick();}, self.getInterval(), self);
+                }
+                else {
+                    this.m_initialized = false;
+                }
+            }
+
+            this.isOver = function() {
+                if (this.m_currentBlock == null) {
+                    return false;
+                }
+
+                var relativeBlockPositions = this.m_currentBlock.m_relativeBlockPositions;
+                var currentBlockPosition = this.m_currentBlock.m_position;
+                var x, y;
+                for (var i=0; i<4; i++) {
+                    x = currentBlockPosition.m_x + relativeBlockPositions[i].m_x;
+                    y = currentBlockPosition.m_y + relativeBlockPositions[i].m_y;
+                    if (this.isOccupied(x, y)) {
+                        return true;
+                    }
+                }
+                return false;
+            }
+
+            this.getInterval = function() {
+                var newInterval = INIT_INTERVAL-(this.getLevel()-1)*50;
+                return newInterval;
+            }
+
+            this.isOccupied = function(x, y) {
+                if (x<0 || x>=MAX_COL) {
+                    return true;
+                }
+                if (y<0 || y>=MAX_ROW) {
+                    return true;
+                }
+                //y = (this.m_baselineIdx+1+y)%MAX_ROW;
+                if (this.m_field[x][y].m_permanent) {
+                    return true;
+                }
+                else return false;
+            }
+
+            this.isPossibleMove = function (movement) {
+                var xdiff, ydiff;
+                switch(movement) {
+                    case e_BlockMovement.RIGHT:
+                        xdiff = 1;
+                        ydiff = 0;
+                        break;
+                    case e_BlockMovement.LEFT:
+                        xdiff = -1;
+                        ydiff = 0;
+                        break;
+                    case e_BlockMovement.DOWN:
+                        xdiff = 0;
+                        ydiff = 1;
+                        break;
+                }
+                var x, y;
+                var currentBlock = this.m_currentBlock;
+                for (var i=0; i<4; i++) {
+                    x = currentBlock.m_position.m_x + currentBlock.m_relativeBlockPositions[i].m_x;
+                    y = currentBlock.m_position.m_y + currentBlock.m_relativeBlockPositions[i].m_y;
+                    if (this.isOccupied(x+xdiff, y+ydiff)) {
+                        return false;
+                    }
+                }
+                return true;
+            }
+
+            this.isPossibleRotate = function(rotate) {
+                var surroundingCheckList;
+                var checkListElementCount;
+                var currentBlock = this.m_currentBlock;
+                switch(rotate) {
+                    case e_BlockRotate.CLOCKWISE:
+                        surroundingCheckList = currentBlock.m_rotateClockWiseCheckList;
+                        checkListElementCount = currentBlock.m_rotateClockWiseCheckCount;
+                        break;
+                    case e_BlockRotate.COUNTERCLOCKWISE:
+                        surroundingCheckList = currentBlock.m_rotateCounterClockWiseCheckList;
+                        checkListElementCount = currentBlock.m_rotateCounterClockWiseCheckCount;
+                        break;
+                }
+
+                var x, y;
+                for (var i=0; i<checkListElementCount; i++) {
+                    x = currentBlock.m_position.m_x + surroundingCheckList[i].m_x;
+                    y = currentBlock.m_position.m_y + surroundingCheckList[i].m_y;
+                    if (this.isOccupied(x, y)) {
+                        return false;
+                    }
+                }
+                return true;
+            }
+
+            this.moveBlockLeft = function() {
+                if (this.m_currentBlock) {
+                    if (this.isPossibleMove(e_BlockMovement.LEFT)) {
+                        this.paintCurrentBlock(false);
+                        this.m_currentBlock.moveLeft();
+                        this.paintCurrentBlock(true);
+                    }
+                }
+            }
+
+            this.moveBlockRight = function() {
+                if (this.m_currentBlock) {
+                    if (g_gameConsole.isPossibleMove(e_BlockMovement.RIGHT)) {
+                        g_gameConsole.paintCurrentBlock(false);
+                        g_gameConsole.m_currentBlock.moveRight();
+                        g_gameConsole.paintCurrentBlock(true);
+                    }
+                }
+            }
+
+            this.moveBlockDown = function() {
+                if (this.m_currentBlock) {
+                    if (g_gameConsole.isPossibleMove(e_BlockMovement.DOWN)) {
+                        g_gameConsole.paintCurrentBlock(false);
+                        g_gameConsole.m_currentBlock.moveDown();
+                        g_gameConsole.paintCurrentBlock(true);
+                    }
+                }
+            }
+
+            this.rotateBlockClockwise = function() {
+                if (this.m_currentBlock) {
+                    if (g_gameConsole.isPossibleRotate(e_BlockRotate.CLOCKWISE)) {
+                        g_gameConsole.paintCurrentBlock(false);
+                        g_gameConsole.m_currentBlock.rotate(e_BlockRotate.CLOCKWISE);
+                        g_gameConsole.paintCurrentBlock(true);
+                    }
+                }
+            }
+
+            this.rotateBlockCounterClockwise = function() {
+                if (this.m_currentBlock) {
+                    if (g_gameConsole.isPossibleRotate(e_BlockRotate.COUNTERCLOCKWISE)) {
+                        g_gameConsole.paintCurrentBlock(false);
+                        g_gameConsole.m_currentBlock.rotate(e_BlockRotate.COUNTERCLOCKWISE);
+                        g_gameConsole.paintCurrentBlock(true);
+                    }
+                }
+            }
+
+            this.aggregateCurrentBlock = function() {
+                if (!this.m_currentBlock)
+                    return;
+                var x, y;
+                var currentBlock = this.m_currentBlock;
+                for (var i=0; i<4; i++) {
+                    x = currentBlock.m_position.m_x + currentBlock.m_relativeBlockPositions[i].m_x;
+                    y = currentBlock.m_position.m_y + currentBlock.m_relativeBlockPositions[i].m_y;
+                    this.m_field[x][y].m_permanent = true;
+                    this.m_field[x][y].m_blockFragmentType = currentBlock.m_blockType;
+                }
+                var completedRows = this.checkCompletedRows();
+                if (completedRows.length>0) {
+                    this.m_completedLines += completedRows.length;
+                    this.truncateCompletedRows(completedRows);
+                    var scoreFactor =0;
+                    for (var i=0; i<completedRows.length; i++) {
+                        scoreFactor+=i;
+                    }
+                    this.m_score += 10*i;
+                    document.getElementById("lineCount").innerHTML  = this.m_completedLines;
+                    document.getElementById("level").innerHTML  = this.getLevel();
+                    document.getElementById("score").innerHTML = this.m_score;
+                }
+                this.m_score += 5;
+                document.getElementById("score").innerHTML = this.m_score;
+                this.m_currentBlock = null;
+            }
+
+            this.checkCompletedRows = function() {
+                var affectedRows = new Array();
+                for (var i=0; i<4; i++) {
+                    var found = false;
+                    var toFind = this.m_currentBlock.m_position.m_y+this.m_currentBlock.m_relativeBlockPositions[i].m_y;
+                    for (var j=0; j<affectedRows.length; j++) {
+                        if (affectedRows[j] == toFind) {
+                            found = true;
+                            break;
+                        }
+                    }
+                    if (!found) {
+                        affectedRows.push(toFind);
+                    }
+                }
+
+                var completedRows = new Array();
+                for (var i=0; i<affectedRows.length; i++) {
+                    var isNotComplete = false;
+                    for (var j=0; j<MAX_COL; j++) {
+                        if (!this.m_field[j][affectedRows[i]].m_permanent) {
+                            isNotComplete = true;
+                            break;
+                        }
+                    }
+                    if (!isNotComplete) {
+                        completedRows.push(affectedRows[i]);
+                    }
+                }
+                return completedRows.sort(sortNumber);
+            }
+
+            this.truncateCompletedRows = function(completedRows) {
+                for (var i=0; i<completedRows.length; i++) {
+                    for (var row=completedRows[i]; row>=0; row--) {
+                        var tops = true;
+                        for (var col=0; col<MAX_COL; col++) {
+                            if (row>0) {
+                                if (this.m_field[col][row-1].m_permanent && tops) {
+                                    tops = false;
+                                }
+                                this.m_field[col][row].m_permanent = this.m_field[col][row-1].m_permanent;
+                                var sourceId = "c" + col + "r" + (row-1);
+                                var destId = "c" + col + "r" + row;
+                                document.getElementById(destId).className = document.getElementById(sourceId).className;
+
+                            }
+                            else {
+                                this.m_field[col][row].m_permanent = false;
+                                var id = "c" + col + "r0";
+                                document.getElementById(id).className = "empty";
+                            }
+                        }
+                        if (tops) {
+                            break;
+                        }
+                    }
+                }
+            }
+        }
+        function sortNumber(a, b)
+        {
+            return a-b;
+        }
+        function Position(x, y) {
+            this.m_x = x;
+            this.m_y = y;
+
+            this.transform = function(rotate) {
+                var multiplier;
+                if (rotate == e_BlockRotate.CLOCKWISE) {
+                    multiplier = -1;
+                }
+                else multiplier = 1;
+                var x, y;
+                //x = Math.cos(Math.PI/2*multiplier)*this.m_x + Math.sin(Math.PI/2*multiplier)*this.m_y;
+                x = multiplier*this.m_y;
+                //y = Math.cos(Math.PI/2*multiplier)*this.m_y - Math.sin(Math.PI/2*multiplier)*this.m_x;
+                y = -1*multiplier*this.m_x;
+                this.m_x = x;
+                this.m_y = y;
+            }
+        }
+        function TetrisBlock(tetrisBlockType) {
+            this.m_blockType = tetrisBlockType;
+            this.m_position = new Position(5, 0);
+            this.m_relativeBlockPositions = new Array();
+            this.m_rotateClockWiseCheckCount = 0;
+            this.m_rotateCounterClockWiseCheckCount = 0;
+            this.m_rotateClockWiseCheckList = new Array();
+            this.m_rotateCounterClockWiseCheckList = new Array();
+
+            switch (tetrisBlockType) {
+                case e_TetrisBlockType.I_BLOCK:
+                    this.m_state = false;
+                    this.m_relativeBlockPositions[0] = new Position(-1, 0);
+                    this.m_relativeBlockPositions[1] = new Position(0, 0);
+                    this.m_relativeBlockPositions[2] = new Position(1, 0);
+                    this.m_relativeBlockPositions[3] = new Position(2, 0);
+
+                    this.m_rotateClockWiseCheckCount = 8;
+                    this.m_rotateClockWiseCheckList[0] = new Position(-1, -1);
+                    this.m_rotateClockWiseCheckList[1] = new Position(0, -1);
+                    this.m_rotateClockWiseCheckList[2] = new Position(0, 1);
+                    this.m_rotateClockWiseCheckList[3] = new Position(0, 2);
+                    this.m_rotateClockWiseCheckList[4] = new Position(1, 1);
+                    this.m_rotateClockWiseCheckList[5] = new Position(1, 2);
+                    this.m_rotateClockWiseCheckList[6] = new Position(2, 1);
+                    this.m_rotateClockWiseCheckList[7] = new Position(2, 2);
+
+                    this.m_rotateCounterClockWiseCheckCount = 8;
+                    this.m_rotateCounterClockWiseCheckList[0] = new Position(-1, 1);
+                    this.m_rotateCounterClockWiseCheckList[1] = new Position(0, 1);
+                    this.m_rotateCounterClockWiseCheckList[2] = new Position(0, -1);
+                    this.m_rotateCounterClockWiseCheckList[3] = new Position(0, -2);
+                    this.m_rotateCounterClockWiseCheckList[4] = new Position(1, -1);
+                    this.m_rotateCounterClockWiseCheckList[5] = new Position(1, -2);
+                    this.m_rotateCounterClockWiseCheckList[6] = new Position(2, -1);
+                    this.m_rotateCounterClockWiseCheckList[7] = new Position(2, -2);
+                    break;
+                case e_TetrisBlockType.S_BLOCK:
+                    this.m_state = false;
+                    this.m_relativeBlockPositions[0] = new Position(-1, 1);
+                    this.m_relativeBlockPositions[1] = new Position(0, 1);
+                    this.m_relativeBlockPositions[2] = new Position(0, 0);
+                    this.m_relativeBlockPositions[3] = new Position(1, 0);
+
+                    this.m_rotateClockWiseCheckCount = 3;
+                    this.m_rotateClockWiseCheckList[0] = new Position(-1, -1);
+                    this.m_rotateClockWiseCheckList[1] = new Position(-1, 0);
+                    this.m_rotateClockWiseCheckList[2] = new Position(1, 1);
+
+                    this.m_rotateCounterClockWiseCheckCount = 3;
+                    this.m_rotateCounterClockWiseCheckList[0] = new Position(0, -1);
+                    this.m_rotateCounterClockWiseCheckList[1] = new Position(1, -1);
+                    this.m_rotateCounterClockWiseCheckList[2] = new Position(1, 1);
+                    break;
+                case e_TetrisBlockType.Z_BLOCK:
+                    this.m_state = false;
+                    this.m_relativeBlockPositions[0] = new Position(-1, 0);
+                    this.m_relativeBlockPositions[1] = new Position(0, 0);
+                    this.m_relativeBlockPositions[2] = new Position(0, 1);
+                    this.m_relativeBlockPositions[3] = new Position(1, 1);
+
+                    this.m_rotateClockWiseCheckCount = 3;
+                    this.m_rotateClockWiseCheckList[0] = new Position(-1, -1);
+                    this.m_rotateClockWiseCheckList[1] = new Position(0, -1);
+                    this.m_rotateClockWiseCheckList[2] = new Position(-1, 1);
+
+                    this.m_rotateCounterClockWiseCheckCount = 3;
+                    this.m_rotateCounterClockWiseCheckList[0] = new Position(-1, 1);
+                    this.m_rotateCounterClockWiseCheckList[1] = new Position(1, 0);
+                    this.m_rotateCounterClockWiseCheckList[2] = new Position(1, -1);
+                    break;
+                case e_TetrisBlockType.O_BLOCK:
+                    this.m_relativeBlockPositions[0] = new Position(0, 0);
+                    this.m_relativeBlockPositions[1] = new Position(0, 1);
+                    this.m_relativeBlockPositions[2] = new Position(1, 0);
+                    this.m_relativeBlockPositions[3] = new Position(1, 1);
+
+                    this.m_rotateClockWiseCheckCount = 0;
+                    this.m_rotateCounterClockWiseCheckCount = 0;
+
+                    break;
+                case e_TetrisBlockType.L_BLOCK:
+                    this.m_relativeBlockPositions[0] = new Position(-1, 1);
+                    this.m_relativeBlockPositions[1] = new Position(-1, 0);
+                    this.m_relativeBlockPositions[2] = new Position(0, 0);
+                    this.m_relativeBlockPositions[3] = new Position(1, 0);
+
+                    this.m_rotateClockWiseCheckCount = 4;
+                    this.m_rotateClockWiseCheckList[0] = new Position(-1, -1);
+                    this.m_rotateClockWiseCheckList[1] = new Position(0, -1);
+                    this.m_rotateClockWiseCheckList[2] = new Position(0, 1);
+                    this.m_rotateClockWiseCheckList[3] = new Position(1, 1);
+
+                    this.m_rotateCounterClockWiseCheckCount = 4;
+                    this.m_rotateCounterClockWiseCheckList[0] = new Position(0, -1);
+                    this.m_rotateCounterClockWiseCheckList[1] = new Position(1, -1);
+                    this.m_rotateCounterClockWiseCheckList[2] = new Position(0, 1);
+                    this.m_rotateCounterClockWiseCheckList[3] = new Position(1, 1);
+                    break;
+                case e_TetrisBlockType.J_BLOCK:
+                    this.m_relativeBlockPositions[0] = new Position(-1, 0);
+                    this.m_relativeBlockPositions[1] = new Position(0, 0);
+                    this.m_relativeBlockPositions[2] = new Position(1, 0);
+                    this.m_relativeBlockPositions[3] = new Position(1, 1);
+
+                    this.m_rotateClockWiseCheckCount = 4;
+                    this.m_rotateClockWiseCheckList[0] = new Position(-1, -1);
+                    this.m_rotateClockWiseCheckList[1] = new Position(0, -1);
+                    this.m_rotateClockWiseCheckList[2] = new Position(-1, 1);
+                    this.m_rotateClockWiseCheckList[3] = new Position(0, 1);
+
+                    this.m_rotateCounterClockWiseCheckCount = 4;
+                    this.m_rotateCounterClockWiseCheckList[0] = new Position(0, -1);
+                    this.m_rotateCounterClockWiseCheckList[1] = new Position(1, -1);
+                    this.m_rotateCounterClockWiseCheckList[2] = new Position(-1, 1);
+                    this.m_rotateCounterClockWiseCheckList[3] = new Position(0, 1);
+                    break;
+                case e_TetrisBlockType.T_BLOCK:
+                    this.m_relativeBlockPositions[0] = new Position(-1, 0);
+                    this.m_relativeBlockPositions[1] = new Position(0, 0);
+                    this.m_relativeBlockPositions[2] = new Position(1, 0);
+                    this.m_relativeBlockPositions[3] = new Position(0, 1);
+
+                    this.m_rotateClockWiseCheckCount = 3;
+                    this.m_rotateClockWiseCheckList[0] = new Position(-1, -1);
+                    this.m_rotateClockWiseCheckList[1] = new Position(0, -1);
+                    this.m_rotateClockWiseCheckList[2] = new Position(1, 1);
+
+                    this.m_rotateCounterClockWiseCheckCount = 3;
+                    this.m_rotateCounterClockWiseCheckList[0] = new Position(0, -1);
+                    this.m_rotateCounterClockWiseCheckList[1] = new Position(1, -1);
+                    this.m_rotateCounterClockWiseCheckList[2] = new Position(-1, 1);
+                    break;
+            }
+
+            this.getBlockClassName = function() {
+                var className;
+                switch(this.m_blockType) {
+                    case e_TetrisBlockType.I_BLOCK:
+                        className = "i_block";
+                        break;
+                    case e_TetrisBlockType.S_BLOCK:
+                        className = "s_block";
+                        break;
+                    case e_TetrisBlockType.Z_BLOCK:
+                        className = "z_block";
+                        break;
+                    case e_TetrisBlockType.O_BLOCK:
+                        className = "o_block";
+                        break;
+                    case e_TetrisBlockType.L_BLOCK:
+                        className = "l_block";
+                        break;
+                    case e_TetrisBlockType.J_BLOCK:
+                        className = "j_block";
+                        break;
+                    case e_TetrisBlockType.T_BLOCK:
+                        className = "t_block";
+                        break;
+                }
+                return className;
+            }
+
+            this.moveRight = function () {
+                this.m_position.m_x++;
+            }
+
+            this.moveLeft = function () {
+                this.m_position.m_x--;
+            }
+
+            this.moveDown = function () {
+                this.m_position.m_y++;
+            }
+
+            this.rotate = function(rotate) {
+                if (this.m_blockType == e_TetrisBlockType.O_BLOCK) {
+                    return;
+                }
+                if (this.m_blockType == e_TetrisBlockType.S_BLOCK || this.m_blockType == e_TetrisBlockType.Z_BLOCK || this.m_blockType == e_TetrisBlockType.I_BLOCK) {
+                    if (this.m_state) {
+                        this.m_state = false;
+                        rotate = e_BlockRotate.CLOCKWISE;
+                    }
+                    else {
+                        this.m_state = true;
+                        rotate = e_BlockRotate.COUNTERCLOCKWISE;
+                    }
+                }
+
+                for (var i=0; i<4; i++) {
+                    this.m_relativeBlockPositions[i].transform(rotate);
+                }
+                for (var i=0; i<this.m_rotateClockWiseCheckCount; i++) {
+                    this.m_rotateClockWiseCheckList[i].transform(rotate);
+                }
+                for (var i=0; i<this.m_rotateCounterClockWiseCheckCount; i++) {
+                    this.m_rotateCounterClockWiseCheckList[i].transform(rotate);
+                }
+            }
+        }
+        document.onkeydown = function(e) {
+            var keyType;
+            if(window.event) {
+                keyType = window.event.keyCode;
+            }
+            else if(e.which) {
+                keyType = e.which;
+            }
+
+            switch(keyType) {
+                case e_KeyType.LEFT:
+                    g_gameConsole.moveBlockLeft();
+                    break;
+                case e_KeyType.RIGHT:
+                    g_gameConsole.moveBlockRight();
+                    break;
+                case e_KeyType.DOWN:
+                    g_gameConsole.moveBlockDown();
+                    break;
+                case e_KeyType.ROTATE_CLOCKWISE:
+                    g_gameConsole.rotateBlockClockwise();
+                    break;
+                case e_KeyType.ROTATE_COUNTERCLOCKWISE:
+                    g_gameConsole.rotateBlockCounterClockwise();
+                    break;
+                default:
+                    break;
+            }
+        }
+
+        var g_gameConsole;
+        function load() {
+            g_gameConsole = new Console();
+        }
+        //]]>
+    </script>
+
+</head>
+
+<body onload="load();">
+<div id="gameArea">
+    <table width = 495>
+        <tr>
+            <td rowspan = 6 align=center>
+                <div id="tile">
+                </div>
+            </td>
+            <td id="panel">
+                <br>
+                <div id="caption">Level:</div>
+                <div id="level">1</div><br>
+            </td>
+        </tr>
+        <tr>
+            <td id="panel">
+                <div id="caption">Line Count:</div>
+                <div id="lineCount">0</div><br>
+        </tr>
+        <tr>
+            <td id="panel">
+                <div id="caption">Score:</div>
+                <div id="score">0</div><br>
+            </td>
+        </tr>
+        <tr>
+            <td id="panel">
+                <div id="caption">Next Block</div>
+                <center><div id="nextBlock"></div></center><br>
+            </td>
+        </tr>
+        <tr>
+            <td id="panel">
+                <div id ="caption">Instructions</div>
+                <font size=2>
+                    Move Left: , (comma)<br>
+                    Move Right: / (slash)<br>
+                    Move Down: . (period)<br>
+                    Rotate Clockwise: x<br>
+                    Rotate Counterclockwise: z<br>
+                </font>
+            </td>
+        </tr>
+        <tr>
+            <td id="panel" align = center>
+                <form><input type="button" value="  Pause/Start  " onClick="g_gameConsole.pauseNstart()"/><input type="button" value="  Restart  " onClick="g_gameConsole.begin()"/></form>
+            </td>
+        </tr>
+    </table>
+
+</div>
+
+
+</body>
+</html>
