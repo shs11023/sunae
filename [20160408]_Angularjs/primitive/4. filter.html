@@ -1,0 +1,38 @@
+<html>
+<head><title></title>
+<script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.5.3/angular.min.js"></script>
+<script>
+
+var myApp = angular.module('myApp', []);
+
+myApp.filter('reverse', function () {
+    return function (input, uppercase) {
+        var out = '';
+        for (var i = 0; i < input.length; i++) {
+            out = input.charAt(i) + out;
+        }
+        if (uppercase) {
+            out = out.toUpperCase();
+        }
+        return out;
+    }
+});
+
+// 데이터를 제공하는 컨트롤러
+myApp.controller('MainCtrl', ['$scope', function ($scope) {
+    $scope.greeting = 'Todd Motto';
+}]);
+
+</script>
+</head>
+
+<body>
+<div ng-app="myApp">
+    <div ng-controller="MainCtrl">
+        <p>No filter: {{ greeting }}</p>
+        <p>Reverse: {{ greeting | reverse }}</p>
+    </div>
+</div>
+</body>
+</html>
+

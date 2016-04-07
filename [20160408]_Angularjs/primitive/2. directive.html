@@ -1,0 +1,40 @@
+<html>
+<head><title></title>
+<script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.5.3/angular.min.js"></script>
+<script>
+
+var myApp = angular.module('myApp', []);
+
+myApp.directive('customButton', function () {
+  return {
+		restrict: 'AECM',
+        replace: true,
+		transclude: true,
+		template: '<a href="" class="myawesomebutton" ng-transclude>' +
+                      '<i class="icon-ok-sign"></i>' +
+                  '</a>',
+        link: function (scope, element, attrs) {
+                // DOM manipulation/events here!
+        }
+    };
+});
+
+</script>
+</head>
+
+<body>
+<div ng-app="myApp">
+<!-- 1: 속성으로 정의 -->
+<a custom-button>Click me</a>
+
+<!-- 2: 요소로 정의 -->
+<custom-button>Click me</custom-button>
+
+<!-- 3: 클래스로 정의(IE 구버전 호환을 위해) -->
+<a class="custom-button">Click me</a>
+
+<!-- 4: 주석으로 정의 (데모로는 별로 안좋긴 하다) -->
+<!-- directive: custom-button -->
+</div>
+</body>
+</html>

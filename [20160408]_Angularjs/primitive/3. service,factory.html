@@ -1,0 +1,51 @@
+<html>
+<head><title></title>
+<script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.5.3/angular.min.js"></script>
+<script>
+
+var myApp = angular.module('myApp', []);
+
+myApp.service('Math', function () {
+  this.multiply = function (x, y) {
+    return x * y;
+  };
+});
+
+myApp.controller('MainCtrl', ['$scope', function ($scope) {
+    var a = 12;
+    var b = 24;
+
+    // 결과는 288
+    var result = Math.multiply(a, b);
+}]);
+
+
+///////////////////////////////////////////////////////////////////
+
+myApp.factory('Server', ['$http', function ($http) {
+  return {
+    get: function(url) {
+      return $http.get(url);
+    },
+    post: function(url) {
+      return $http.post(url);
+    },
+  };
+}]);
+
+myApp.controller('MainCtrl', ['$scope', 'Server', function ($scope, Server) {
+    var jsonGet = 'http://myserver/getURL';
+    var jsonPost = 'http://myserver/postURL';
+    Server.get(jsonGet);
+    Server.post(jsonPost);
+}]);
+
+</script>
+</head>
+
+<body>
+<div ng-app="myApp">
+</div>
+</body>
+</html>
+

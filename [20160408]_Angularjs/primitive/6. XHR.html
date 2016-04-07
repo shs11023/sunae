@@ -1,0 +1,35 @@
+<html>
+<head><title></title>
+<script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.5.3/angular.min.js"></script>
+<script>
+
+var myApp = angular.module('myApp', []);
+
+myApp.controller('MainCtrl', ['$scope', '$http', function ($scope, $http) {
+  $http({
+    method: 'GET',
+    url: '//localhost:9000/someUrl'
+  });
+
+  .success(function (data, status, headers, config) {
+    // 성공! 데이터를 가져왔어
+	$scope.user.username = data.user.name;
+  })
+  .error(function (data, status, headers, config) {
+    // 이런. 뭔가 잘못되었음! :(
+  });
+
+}]);
+
+</script>
+</head>
+
+<body>
+<div ng-app="myApp">
+	<div ng-controller="UserCtrl">
+	  <p>{{ user.username }}</p>
+	</div>
+</div>
+</body>
+</html>
+
