@@ -1,0 +1,66 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Frameset//EN"
+"http://www.w3.org/TR/xhtml1/DTD/xhtml1-frameset.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+	<head>
+		<link rel="stylesheet" type="text/css" href="/mystyle.css">
+		<script language="javascript" type="text/javascript" src="/jquery-1.7.1.min.js"></script>
+		<script language="javascript" type="text/javascript" src="/MemGraph.js"></script>
+		<script type="text/javascript" src="/googlejsapi.js"></script>
+		<script type="text/javascript">
+			google.load("visualization", "1", {packages:["corechart"]});
+			google.setOnLoadCallback(drawChart);
+
+			var chart_vmsize;
+			var chart_vmrss;
+
+			var vmsize_data = [];
+			var vmrss_data = [];
+
+			var options_vmsize = {
+				title: 'Memory Usage',
+				hAxis: {title: 'VmSize',  titleTextStyle: {color: 'red'}}
+			};
+			var options_vmrss = {
+				title: 'Memory Usage',
+				hAxis: {title: 'VmRSS',  titleTextStyle: {color: 'red'}}
+			};
+
+			function drawChart() {
+				chart_vmsize = new google.visualization.AreaChart(document.getElementById('chart_vmsize'));
+				chart_vmrss = new google.visualization.AreaChart(document.getElementById('chart_vmrss'));
+			}
+
+			function drawVmsizeChart() {
+				var data = google.visualization.arrayToDataTable(vmsize_data);
+				chart_vmsize.draw(data, options_vmsize);
+
+			}
+			function drawVmrssChart() {
+				var data = google.visualization.arrayToDataTable(vmrss_data);
+				chart_vmrss.draw(data, options_vmrss);
+
+			}
+		</script>
+
+		<!-- Set WebSocket ############################## -->
+		<script src="/socket.io/socket.io.js"></script>
+		<script>
+			window.onload = startSocketIO;
+		</script>
+		<!-- Set WebSocket ############################## -->
+	</head>
+	<body>
+		<FORM>
+			Process Name
+			<INPUT type="TEXT" id='proc_name' class="text rosy" />
+			Interval	
+			<INPUT type="TEXT" id='duration' class="text rosy" />
+			<INPUT type="BUTTON" class="button rosy" value="Start" onclick='startMemInfoButtonClicked()'/>
+			<INPUT type="BUTTON" class="button rosy" value="Stop" onclick='stopMemInfoButtonClicked()'/>
+		</FORM>
+		<div id="chart_vmsize" style="width: 1100px; height: 500px;"></div>
+		<div id="chart_vmrss" style="width: 1100px; height: 500px;"></div>
+	</body>
+</html>
+

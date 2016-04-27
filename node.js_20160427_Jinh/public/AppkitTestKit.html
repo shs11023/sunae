@@ -1,0 +1,98 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Frameset//EN"
+"http://www.w3.org/TR/xhtml1/DTD/xhtml1-frameset.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+	<head>
+		<link rel="stylesheet" type="text/css" href="/mystyle.css">
+		<script language="javascript" type="text/javascript" src="/jquery-1.7.1.min.js"></script>
+		<script language="javascript" type="text/javascript" src="/AppkitTestKit.js"></script>
+
+		<!-- Set WebSocket ############################## -->
+		<script src="/socket.io/socket.io.js"></script>
+		<script>
+			window.onload = startSocketIO;
+			/*
+			window.onload = function() {
+				var socket = io.connect();
+
+				socket.on('toclient', function(data){
+					console.log(data);
+					writeToLogArea(data.msg);
+				});
+
+				socket.on('stdout', function(data){
+					console.log("STDOUT!");
+					console.log(data);
+					console.log(JSON.stringify(data));
+					writeToLogArea(data.msg);
+				});
+				socket.on('stderr', function(data){
+					console.log("STDERR!");
+					console.log(JSON.stringify(data));
+					writeToLogArea(data.msg);
+				});
+				socket.on('error', function(data){
+					console.log("ERROR!");
+					console.log(JSON.stringify(data));
+					writeToLogArea(data.msg);
+				});
+			};
+			*/
+		</script>
+		<!-- Set WebSocket ############################## -->
+
+		<script>
+			getAppList();
+		</script>
+
+		<style type="text/css">
+		</style>          
+
+	</head>
+
+
+
+
+
+	<body>
+		<h1>Appkit Test Kit</h1>
+		<div id='tc' height=400 width=600>
+			<FORM action="/upload/tc_app", method="post", enctype="multipart/form-data">
+				<INPUT type="file" name="uploadFile"/>
+				<INPUT type="submit" class='button blue' name="Upload" value="Upload to STB"/>
+			</FORM>
+			<hr/>
+			<FORM name='appList'>
+				<select id="tc_select">
+					<option> -- Select Appication --
+				</select>
+				<INPUT type="BUTTON" class="button blue" value="Run App" onclick='runAppButtonClicked()'>
+
+			</FORM>
+			<FORM name='cmdForm'>
+				<INPUT type="TEXT" id='cmd_text' class="text rosy" onkeyPress="javascript: if(event.keyCode == 13){runCmdButtonClicked();}"/>
+				<INPUT type="BUTTON" class="button rosy" value="Run CMD" onclick='runCmdButtonClicked()'/>
+				<INPUT type="BUTTON" class="button rosy" value="Killall Proc" onclick='runKillAllButtonClicked()'/>
+
+			</FORM>
+			<FORM>
+				<textarea id='logArea' readonly='readonly' rows=20 cols=150 wrap=off placeholder='STB Log Area..' style="font-size:10px;" ></textarea>
+			</FORM>
+			<FORM>
+				<INPUT type="BUTTON" class="button blue" value="save" onclick='saveLogButtonClicked()'/>
+				<INPUT type="BUTTON" class="button blue" value="clear" onclick='clearLogButtonClicked()'/>
+			</FORM>
+			<hr/>
+			<FORM>
+				<textarea id='resultArea' readonly='readonly' rows=20 cols=150 wrap=off placeholder='Result Area'></textarea>
+			</FORM>
+			<FORM>
+				<INPUT type="BUTTON" class="button blue" value="save" onclick='saveResultButtonClicked()'/>
+				<INPUT type="BUTTON" class="button blue" value="clear" onclick='clearResultButtonClicked()'/>
+			</FORM>
+
+		</div>
+
+	</body>
+
+</html>

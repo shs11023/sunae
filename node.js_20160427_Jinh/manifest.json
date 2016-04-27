@@ -1,0 +1,62 @@
+{
+	"TC_LIST": 
+		[
+		{
+			"tc_name": "TC_META_SVC_GetServiceCount",
+				"argument": {
+
+				},
+				"expect_result": {
+
+				}
+		},
+		{
+			"tc_name": "TC_META_SVC_GetServiceList",
+			"argument": {
+
+			},
+			"expect_result": {
+
+			}
+		},
+		{
+			"tc_name": "TC_META_SVC_GetService",
+			"argument": {
+				"svc_uid": 3
+			},
+			"expect_result": {
+				"service": {
+					"name": "mbc everyone",
+					"version": 1
+				}
+			}
+		},
+		{
+			"tc_name": "TC_META_RECORD_GetItems",
+			"argument": {
+
+			},
+			"expect_result": {
+				"count": 10
+			}
+		},
+		{
+			"tc_name": "TC_META_RECORD_Count",
+			"argument": {
+
+			},
+			"expect_result": {
+				"count": 10
+			}
+		},
+		{
+			"tc_name": "TC_SYSINFO_STB_GetModelName",
+			"argument": {        
+			},
+			"expect_result": {
+				"name": "YSR-2000"
+			}
+		}
+	]
+}
+
